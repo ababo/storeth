@@ -19,7 +19,7 @@ type Block struct {
 
 // AddBlock adds a new block. Drops an oldest one if maxNumBlocks is
 // specified and the number of blocks after addition exceeds this limit.
-func AddBlock(querier *reform.Querier, block *Block, maxNumBlocks *int) error {
+func AddBlock(querier *reform.Querier, block *Block, maxNumBlocks *uint64) error {
 	return nil
 }
 

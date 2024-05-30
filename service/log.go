@@ -26,8 +26,8 @@ func (s *Service) GetLogs(args GetLogsArgs) (*GetLogsResult, error) {
 	}
 
 	contents := make([]json.RawMessage, len(logs))
-	for _, val := range logs {
-		contents = append(contents, val.Content)
+	for i, val := range logs {
+		contents[i] = val.Content
 	}
 
 	return &GetLogsResult{Logs: contents}, nil
