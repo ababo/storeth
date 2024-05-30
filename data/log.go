@@ -18,11 +18,11 @@ type Log struct {
 }
 
 // AddLog adds a new event log.
-func AddLog(db *reform.DB, log *Log) error {
+func AddLog(querier *reform.Querier, log *Log) error {
 	return nil
 }
 
-// FindLogs finds logs for a specified address and optionally for a block index range.
-func FindLogs(db *reform.DB, address string, fromBlock *uint64, toBlock *uint64) ([]Log, error) {
+// FindLogs finds logs for a specified address and optionally for a block range.
+func FindLogs(querier *reform.Querier, address string, fromBlock *uint64, numBlocks *uint64) ([]Log, error) {
 	return nil, nil
 }

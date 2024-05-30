@@ -10,7 +10,7 @@ import (
 type GetLogsArgs struct {
 	Address   string  `json:"address"`
 	FromBlock *uint64 `json:"fromBlock"`
-	ToBlock   *uint64 `json:"toBlock"`
+	NumBlocks *uint64 `json:"numBlocks"`
 }
 
 // GetLogsResult is a result for Service.GetLogs().
@@ -20,7 +20,7 @@ type GetLogsResult struct {
 
 // GetLogs retrieves event logs for a given address.
 func (s *Service) GetLogs(args GetLogsArgs) (*GetLogsResult, error) {
-	logs, err := data.FindLogs(s.db, args.Address, args.FromBlock, args.ToBlock)
+	logs, err := data.FindLogs(s.db.Querier, args.Address, args.FromBlock, args.NumBlocks)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find logs: %v", err)
 	}

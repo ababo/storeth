@@ -1,9 +1,12 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"storeth/data"
+
+	"github.com/ethereum/go-ethereum/rpc"
 )
 
 // GetBlockArgs is a set of args for Service.GetBlock().
@@ -27,9 +30,9 @@ func (s *Service) GetBlock(args GetBlockArgs) (*GetBlockResult, error) {
 	var err error
 
 	if args.Index != nil {
-		block, err = data.GetBlock(s.db, *args.Index)
+		block, err = data.GetBlock(s.db.Querier, *args.Index)
 	} else {
-		block, err = data.GetBlockByHash(s.db, *args.Hash)
+		block, err = data.GetBlockByHash(s.db.Querier, *args.Hash)
 	}
 
 	if err != nil {
@@ -41,4 +44,42 @@ func (s *Service) GetBlock(args GetBlockArgs) (*GetBlockResult, error) {
 	}
 
 	return &GetBlockResult{Block: block.Content}, nil
+}
+
+// GetBlockRangeResult is a result for Service.GetBlockRange().
+type GetBlockRangeResult struct {
+	FromIndex uint64 `json:"fromIndex"`
+	NumBlocks uint64 `json:"numBlocks"`
+}
+
+// GetBlockRange returns a range of stored blocks.
+func (s *Service) GetBlockRange() (*GetBlockRangeResult, error) {
+	from, num, err := data.GetBlockRange(s.db.Querier)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get block range: %v", err)
+	}
+	return &GetBlockRangeResult{FromIndex: from, NumBlocks: num}, nil
+}
+
+// NewBlocks creates a subscription to new block notifications.
+func (s *Service) NewBlocks(ctx context.Context) (*rpc.Subscription, error) {
+	notifier, ok := rpc.NotifierFromContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("failed to create subscription")
+	}
+
+	sub := notifier.CreateSubscription()
+
+	s.mutex.Lock()
+	s.newBlocks[notifier] = sub.ID
+	s.mutex.Unlock()
+
+	go func() {
+		<-sub.Err()
+		s.mutex.Lock()
+		delete(s.newBlocks, notifier)
+		s.mutex.Unlock()
+	}()
+
+	return sub, nil
 }

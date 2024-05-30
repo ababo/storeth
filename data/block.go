@@ -17,18 +17,23 @@ type Block struct {
 	Content json.RawMessage `reform:"content"`
 }
 
-// AddBlock adds a new block. Drops an oldest one if maxNumBlocks
-// is specified and the new number of blocks exceeds this limit.
-func AddBlock(db *reform.DB, block *Block, maxNumBlocks *int) error {
+// AddBlock adds a new block. Drops an oldest one if maxNumBlocks is
+// specified and the number of blocks after addition exceeds this limit.
+func AddBlock(querier *reform.Querier, block *Block, maxNumBlocks *int) error {
 	return nil
 }
 
 // GetBlock retrieves block by index. Returns nil if no block is found.
-func GetBlock(db *reform.DB, index uint64) (*Block, error) {
+func GetBlock(querier *reform.Querier, index uint64) (*Block, error) {
 	return nil, nil
 }
 
 // GetBlock retrieves block by hash. Returns nil if no block is found.
-func GetBlockByHash(db *reform.DB, hash string) (*Block, error) {
+func GetBlockByHash(querier *reform.Querier, hash string) (*Block, error) {
 	return nil, nil
+}
+
+// GetBlockRange returns a range of stored blocks.
+func GetBlockRange(querier *reform.Querier) (fromIndex uint64, numBlocks uint64, err error) {
+	return 0, 0, nil
 }

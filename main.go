@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/alecthomas/kong"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -31,10 +32,17 @@ func main() {
 
 	db := reform.NewDB(sqlDB, postgresql.Dialect, reform.NewPrintfLogger(log.Printf))
 
-	service := service.NewService(db)
+	svc := service.NewService(db)
+
+	go func() {
+		for i := 0; ; i++ {
+			time.Sleep(time.Second)
+			service.NotifyNewBlock(svc, uint64(i))
+		}
+	}()
 
 	server := rpc.NewServer()
-	server.RegisterName("storeth", service)
+	server.RegisterName("storeth", svc)
 
 	http.HandleFunc("/", server.ServeHTTP)
 	http.Handle("/ws", server.WebsocketHandler(nil))
