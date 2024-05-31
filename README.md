@@ -83,3 +83,21 @@ The server supports two types of transport: HTTP and WS. Note, the former doesn'
     - graceful server exiting
     - multiple retries for failed requests
     - logging levels (and maybe structured logging)
+
+## Some Answers
+
+* How would you handle security of the API?
+
+    I would support access tokens passed in the `Authorization` header. Might be plain tokens or JWT.
+
+* How would you improve the performance of your approach?
+
+    I believe the chosen design gives near-optimal performance taking into account that we reuse database rows. There's always a room for improvement, just now hard to find practical bottlenecks.
+
+* How would you adapt your design to store the same data for the entire history of Ethereum Mainnet?
+
+    I will probably need to create tables to store additional information, including transaction receipts, uncles, contract ABIs, account states, etc. Frankly, I'm not an Ethereum expert to answer that question in detail.
+
+* What would it take to deploy and monitor a service like this in production?
+  
+    The service can be deployed as a container using Kubernetes, so the standard Kubernetes toolchain will be in charge (Kubectl, Argo CD, Prometheus, Grafana, etc.). Frankly, I'm not too familiar with the DevOps field.
