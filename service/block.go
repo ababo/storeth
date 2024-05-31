@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"storeth/data"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
 // GetBlockArgs is a set of args for Service.GetBlock().
 type GetBlockArgs struct {
-	Index *uint64 `json:"index"`
-	Hash  *string `json:"hash"`
+	Index *uint64      `json:"index"`
+	Hash  *common.Hash `json:"hash"`
 }
 
 // GetLogsResult is a result for Service.GetLogs().
@@ -49,16 +50,16 @@ func (s *Service) GetBlock(args GetBlockArgs) (*GetBlockResult, error) {
 // GetBlockRangeResult is a result for Service.GetBlockRange().
 type GetBlockRangeResult struct {
 	FromIndex uint64 `json:"fromIndex"`
-	NumBlocks uint64 `json:"numBlocks"`
+	ToBlock   uint64 `json:"toBlock"`
 }
 
 // GetBlockRange returns a range of stored blocks.
 func (s *Service) GetBlockRange() (*GetBlockRangeResult, error) {
-	from, num, err := data.GetBlockRange(s.db.Querier)
+	from, to, err := data.GetBlockRange(s.db.Querier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get block range: %v", err)
 	}
-	return &GetBlockRangeResult{FromIndex: from, NumBlocks: num}, nil
+	return &GetBlockRangeResult{FromIndex: from, ToBlock: to}, nil
 }
 
 // NewBlocks creates a subscription to new block notifications.

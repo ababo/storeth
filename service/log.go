@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"storeth/data"
+
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // GetLogsArgs is a set of args for Service.GetLogs().
 type GetLogsArgs struct {
-	Address   string  `json:"address"`
-	FromBlock *uint64 `json:"fromBlock"`
-	NumBlocks *uint64 `json:"numBlocks"`
+	Address   *common.Address `json:"address"`
+	FromBlock *uint64         `json:"fromBlock"`
+	ToBlock   *uint64         `json:"numBlocks"` // Not including ToBlock.
 }
 
 // GetLogsResult is a result for Service.GetLogs().
@@ -19,8 +21,14 @@ type GetLogsResult struct {
 }
 
 // GetLogs retrieves event logs for a given address.
-func (s *Service) GetLogs(args GetLogsArgs) (*GetLogsResult, error) {
-	logs, err := data.FindLogs(s.db.Querier, args.Address, args.FromBlock, args.NumBlocks)
+func (s *Service) FindLogs(args GetLogsArgs) (*GetLogsResult, error) {
+	logs, err := data.FindLogs(
+		s.db.Querier,
+		&data.FindLogsFilter{
+			Address:   args.Address,
+			FromBlock: args.FromBlock,
+			ToBlock:   args.ToBlock,
+		})
 	if err != nil {
 		return nil, fmt.Errorf("failed to find logs: %v", err)
 	}

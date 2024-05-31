@@ -15,16 +15,16 @@ import (
 )
 
 func monitorEth(conf *config, db *reform.DB, svc *service.Service) {
-	storedFrom, storedNum, err := data.GetBlockRange(db.Querier)
+	storedFrom, storedTo, err := data.GetBlockRange(db.Querier)
 	if err != nil {
 		log.Fatalf("failed to get stored block range: %v", err)
 	}
 
 	var latestStored *uint64 = nil
-	if storedNum > 0 {
+	if storedTo-storedFrom > 0 {
 		latestStored = new(uint64)
-		*latestStored = storedFrom + storedNum - 1
-		log.Printf("stored blocks %d-%d", storedFrom, *latestStored)
+		*latestStored = storedTo - 1
+		log.Printf("stored blocks [%d, %d)", storedFrom, storedTo)
 	} else {
 		log.Printf("no blocks stored yet")
 	}
@@ -40,15 +40,22 @@ func monitorEth(conf *config, db *reform.DB, svc *service.Service) {
 		log.Fatalf("failed to subscribe to new eth blocks: %v", err)
 	}
 
-	for {
+	for prevIndex := uint64(0); ; {
 		select {
 		case err := <-sub.Err():
 			log.Fatalf("failed to receive new eth block notification: %v", err)
 		case header := <-headers:
-			index := header.Number.Uint64()
+			// Events might not be collected in time, so let's go behind by 1 block.
+			index := header.Number.Uint64() - 1
+			if index <= prevIndex {
+				continue
+			}
+
 			if err := processNextBlock(conf, db, svc, client, index, latestStored); err != nil {
 				log.Fatalf("failed to process next block: %v", err)
 			}
+
+			prevIndex = index
 			latestStored = nil // We've already fetched the missing blocks.
 		}
 	}
@@ -101,7 +108,7 @@ func addBlock(conf *config, db *reform.DB, client *ethclient.Client, index uint6
 
 	block := data.Block{
 		Index:   index,
-		Hash:    rpcBlock.Hash.Hex(),
+		Hash:    rpcBlock.Hash,
 		Content: blockJSON,
 	}
 
@@ -121,7 +128,7 @@ func addBlock(conf *config, db *reform.DB, client *ethclient.Client, index uint6
 		return fmt.Errorf("failed to begin tx: %v", err)
 	}
 
-	if err := data.AddBlock(tx.Querier, &block, conf.MaxNumBlocks); err != nil {
+	if err := data.AddBlock(tx, &block, conf.MaxNumBlocks); err != nil {
 		return fmt.Errorf("failed to store block: %v", err)
 	}
 
@@ -132,7 +139,7 @@ func addBlock(conf *config, db *reform.DB, client *ethclient.Client, index uint6
 		}
 
 		log := data.Log{
-			Address: ethLog.Address.Hex(),
+			Address: ethLog.Address,
 			Block:   index,
 			Content: logJSON,
 		}
