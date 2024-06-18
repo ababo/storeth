@@ -12,7 +12,7 @@ import (
 type GetLogsArgs struct {
 	Address   *common.Address `json:"address"`
 	FromBlock *uint64         `json:"fromBlock"`
-	ToBlock   *uint64         `json:"numBlocks"` // Not including ToBlock.
+	ToBlock   *uint64         `json:"toBlock"` // Not including ToBlock.
 }
 
 // GetLogsResult is a result for Service.GetLogs().
